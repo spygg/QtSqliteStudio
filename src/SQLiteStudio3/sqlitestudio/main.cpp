@@ -1,41 +1,45 @@
-#include "mainwindow.h"
-#include "iconmanager.h"
-#include "dbtree/dbtreeitem.h"
-#include "datagrid/sqlquerymodelcolumn.h"
+#include <QApplication>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
+#include <QDebug>
+#include <QDir>
+#include <QMessageBox>
+#include <QPluginLoader>
+#include <QProcess>
+#include <QSplashScreen>
+#include <QThread>
+#include "completionhelper.h"
+#include "coreSQLiteStudio_global.h"
 #include "datagrid/sqlquerymodel.h"
+#include "datagrid/sqlquerymodelcolumn.h"
+#include "dataview.h"
+#include "dbtree/dbtree.h"
+#include "dbtree/dbtreeitem.h"
+#include "dialogs/languagedialog.h"
+#include "dialogs/triggerdialog.h"
+#include "guiSQLiteStudio_global.h"
+#include "iconmanager.h"
+#include "log.h"
+#include "mainwindow.h"
+#include "multieditor/multieditorbool.h"
+#include "multieditor/multieditordate.h"
+#include "multieditor/multieditordatetime.h"
+#include "multieditor/multieditortime.h"
+#include "qio.h"
+#include "services/pluginmanager.h"
+#include "services/updatemanager.h"
+#include "singleapplication/singleapplication.h"
 #include "sqleditor.h"
+#include "sqlitestudio.h"
+#include "translations.h"
+#include "uiconfig.h"
+#include "uidebug.h"
 #include "windows/editorwindow.h"
 #include "windows/tablewindow.h"
 #include "windows/viewwindow.h"
-#include "dataview.h"
-#include "dbtree/dbtree.h"
-#include "multieditor/multieditordatetime.h"
-#include "multieditor/multieditortime.h"
-#include "multieditor/multieditordate.h"
-#include "multieditor/multieditorbool.h"
-#include "uiconfig.h"
-#include "sqlitestudio.h"
-#include "uidebug.h"
-#include "completionhelper.h"
-#include "services/updatemanager.h"
-#include "guiSQLiteStudio_global.h"
-#include "coreSQLiteStudio_global.h"
-#include "log.h"
-#include "qio.h"
-#include "translations.h"
-#include "dialogs/languagedialog.h"
-#include "dialogs/triggerdialog.h"
-#include "services/pluginmanager.h"
-#include "singleapplication/singleapplication.h"
-#include <QCommandLineParser>
-#include <QCommandLineOption>
-#include <QApplication>
-#include <QSplashScreen>
-#include <QThread>
-#include <QPluginLoader>
-#include <QDebug>
-#include <QMessageBox>
-#include <QProcess>
+
+#include "services/dbmanager.h"
+
 #ifdef Q_OS_WIN
 #   include <windef.h>
 #   include <windows.h>
@@ -172,6 +176,22 @@ int main(int argc, char *argv[])
 
     if (!dbToOpen.isNull())
         MainWindow::getInstance()->openDb(dbToOpen);
+
+    //说明过去没有历史
+    if (DBLIST->getDbList().size() <= 0) {
+        QDir dir = QDir(a.applicationDirPath());
+
+        QStringList filters;
+        filters << "*.db";
+
+        // 获取当前路径下所有符合过滤器的文件信息列表
+        QFileInfoList list = dir.entryInfoList(filters, QDir::Files);
+
+        // 遍历文件信息列表并输出文件名
+        foreach (QFileInfo fileInfo, list) {
+            MainWindow::getInstance()->openDb(fileInfo.fileName());
+        }
+    }
 
 #ifdef PORTABLE_CONFIG
         //UPDATES->checkForUpdates();
