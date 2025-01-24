@@ -1,0 +1,5 @@
+build*/*
+*.user
+bin/*
+src/*.user
+src/build-*/*

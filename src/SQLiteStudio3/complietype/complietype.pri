@@ -1,0 +1,2 @@
+## 定义使用非DLL
+DEFINES += NO_USEDLLS
